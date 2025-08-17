@@ -130,7 +130,7 @@ def _plot_rae(df: pd.DataFrame) -> go.Figure:
         x=df.index,
         y=df['rae'],
         mode='lines+markers',
-        name='RAE (%)',
+        name='APE (%)',
         line=dict(color='orange'),
         marker=dict(size=4)
     ))
@@ -138,7 +138,7 @@ def _plot_rae(df: pd.DataFrame) -> go.Figure:
     fig.add_hline(
         y=0.10,  # 10% RAE threshold
         line=dict(color='red', dash='dash'),
-        annotation_text='10% RAE Threshold',
+        annotation_text='10% MAPE Threshold',
         annotation_position='top right'
     )
     rae_mean = df['rae'].mean()
@@ -146,14 +146,14 @@ def _plot_rae(df: pd.DataFrame) -> go.Figure:
     fig.add_hline(
         y= rae_mean,  # rae mean
         line=dict(color='green', dash='dot'),
-        annotation_text=f'{100*rae_mean:.2f} RAE Mean FH =1d',
+        annotation_text=f'{100*rae_mean:.2f} MAPE, FH =1d',
         annotation_position='bottom right'
     )
 
     fig.update_layout(
-        title='Pointwise Relative Absolute Error (RAE) over 1 day Forecast Horizon',
+        title='Pointwise Absolute Percentage Error (APE) over 1 day Forecast Horizon',
         xaxis_title='Date',
-        yaxis_title='RAE (%)',
+        yaxis_title='APE (%)',
         template='plotly_white',
         height=400
     )
@@ -220,23 +220,23 @@ if raw_df is not None:
         #join the dataframes
         df_test_results = pd.concat([df_pred[[TARGET, 'y_hat']],df_pred_alt[['y_fwd','quartile']]], axis=1, join="inner")  # display first row of both predictions side by side
         df_test_results['quartile'] = df_test_results['quartile'].str.upper() 
-        # RAE metrics
+        # APE metrics
         df_test_results['rae_fwd'] = df_test_results.apply(lambda row: abs(row['demand'] - row['y_fwd']) / row['demand'], axis=1)
         df_test_results['rae']     = df_test_results.apply(lambda row: abs(row['demand'] - row['y_hat']) / row['demand'], axis=1)        
         
         st.subheader("Results by Scenario")
-        st.caption("1 day prediction Scenario")
+        st.caption("1 day Forecast")
         dict_result = df_pred.attrs
         c1, c2, c3 = st.columns(3)
         c1.metric("RMSE", f"{dict_result['rmse']:,.2f}")
         c2.metric("MAE", f"{dict_result['mae']:,.2f}")
-        c3.metric("Mean RAE", f"{100*dict_result['mrae']:,.2f}%")        
+        c3.metric("MAPE", f"{100*dict_result['mrae']:,.2f}%")        
 
         # Optional quartile summary
         if "quartile" in df_test_results.columns:
             st.subheader("Model performance by Quartile Scenario")
-            rmse_f = lambda x: np.sqrt(mean_squared_error(x[TARGET], x["y_fwd"]))
-            mae_f = lambda x: mean_absolute_error(x[TARGET], x["y_fwd"])
+            rmse_f = lambda x: np.sqrt(mean_squared_error(x[TARGET], x["y_hat"]))
+            mae_f = lambda x: mean_absolute_error(x[TARGET], x["y_hat"])
             df_quart = (
                 df_test_results.groupby("quartile")
                 .apply(lambda x: pd.Series({"RMSE": rmse_f(x), "MAE": mae_f(x)}))
@@ -246,18 +246,20 @@ if raw_df is not None:
 
             st.plotly_chart(_plot_quartile_errors(df_quart))
 
-        st.caption("One Shot prediction Scenario")
+        st.plotly_chart(_plot_rae(df_test_results), use_container_width=True)
+        
+        st.caption("One Shot / Walk-forward Forecast")
         dict_result = df_pred_alt.attrs
         c4, c5, c6 = st.columns(3)
         c4.metric("RMSE", f"{dict_result['rmse']:,.2f}")
         c5.metric("MAE", f"{dict_result['mae']:,.2f}")
-        c6.metric("Mean RAE", f"{100*dict_result['mrae']:,.2f}%")
+        c6.metric("MAPE", f"{100*dict_result['mrae']:,.2f}%")
 
 
         st.subheader("Key Plots")
         # Plots
         st.plotly_chart(_plot_timeseries(df_test_results, TARGET), use_container_width=True)
-        st.plotly_chart(_plot_rae(df_test_results), use_container_width=True)
+        
 
         # Skill curve (seed with dev tail when seasonal baseline)
         L = 1 if baseline == "persistence" else int(baseline.split("_")[1])
