@@ -1,6 +1,7 @@
 # 🎈 Blank app template
 
-A simple Streamlit app template for you to modify!
+The current App has in the backend an Hybrid ML Model based on a time series forecast that predicts the demand for an specific dataset based on marketing Mix Modelling Features.
+This dataset depitcs the conventional forecast in a TV Manufacturing facility in Shenzhen, China.
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
 
