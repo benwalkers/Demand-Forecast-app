@@ -1,4 +1,4 @@
-# 🎈 Blank app template
+# 🎈 Demand Forecast App
 
 The current App has in the backend an Hybrid ML Model based on a time series forecast that predicts the demand for an specific dataset based on marketing Mix Modelling Features.
 This dataset depitcs the conventional forecast in a TV Manufacturing facility in Shenzhen, China.
